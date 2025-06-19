@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"chat-api/config"
+	"chat-api/database"
 	"chat-api/middleware"
 	"chat-api/models"
 	"chat-api/utils"
@@ -32,7 +32,7 @@ func SignUp(c *fiber.Ctx) error {
 
 	// Check if user already exists
 	var existingEmail string
-	err := config.DB.QueryRow("SELECT email FROM users WHERE email = $1", input.Email).Scan(existingEmail)
+	err := database.DB.QueryRow("SELECT email FROM users WHERE email = $1", input.Email).Scan(existingEmail)
 	if err != sql.ErrNoRows {
 		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
 			"error": "User already exists " + err.Error(),
@@ -49,7 +49,7 @@ func SignUp(c *fiber.Ctx) error {
 
 	// Create user
 	var userID uuid.UUID
-	err = config.DB.QueryRow(
+	err = database.DB.QueryRow(
 		`INSERT INTO users (email, password) VALUES ($1, $2)
 		 RETURNING user_id`,
 		input.Email, hashedPassword).Scan(&userID)
@@ -82,7 +82,7 @@ func SignIn(c *fiber.Ctx) error {
 	var user models.User
 	token, tokenEerr := middleware.DecodeJWTTokenFromHeader(c)
 	if tokenEerr == nil {
-		config.DB.QueryRow(`
+		database.DB.QueryRow(`
 		SELECT user_id, email
 		FROM users WHERE user_id = $1 AND email = $2`, token.UserID, token.Email).Scan(
 			&user.UserID, &user.Email)
@@ -106,7 +106,7 @@ func SignIn(c *fiber.Ctx) error {
 		})
 	}
 
-	err := config.DB.QueryRow(`
+	err := database.DB.QueryRow(`
 		SELECT user_id, email, password, name 
 		FROM users WHERE email = $1`, input.Email).Scan(
 		&user.UserID, &user.Email, &user.Password, &user.Name)

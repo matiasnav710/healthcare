@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"chat-api/config"
+	"chat-api/database"
 	"chat-api/middleware"
 	"chat-api/models"
 	"chat-api/utils"
@@ -14,7 +14,7 @@ import (
 )
 
 func GetUsers(c *fiber.Ctx) error {
-	rows, err := config.DB.Query(`
+	rows, err := database.DB.Query(`
 		SELECT user_id, email, name, age, height, weight, gender, 
 		       physical_condition , medical_history, profile_image_url
 		FROM users`)
@@ -51,7 +51,7 @@ func GetUser(c *fiber.Ctx) error {
 	}
 
 	var user models.UserResponse
-	err = config.DB.QueryRow(`
+	err = database.DB.QueryRow(`
 		SELECT user_id, email, name, age, height, weight, gender,
 		       physical_condition, medical_history, profile_image_url
 		FROM users WHERE user_id = $1`, userID).Scan(
@@ -91,7 +91,7 @@ func CreateUser(c *fiber.Ctx) error {
 	}
 	fmt.Println(insertData)
 	var userID uuid.UUID
-	err := config.DB.QueryRow(
+	err := database.DB.QueryRow(
 		`INSERT INTO users
 		(email, password, name, age, height, weight, gender, physical_condition, medical_history, profile_image_url)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -160,7 +160,7 @@ func UpdateUser(c *fiber.Ctx) error {
 	query += " WHERE user_id = $" + strconv.Itoa(argCount)
 	args = append(args, userID)
 
-	_, err = config.DB.Exec(query, args...)
+	_, err = database.DB.Exec(query, args...)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to update user " + err.Error(),
@@ -193,7 +193,7 @@ func DeleteUser(c *fiber.Ctx) error {
 		})
 	}
 
-	_, err = config.DB.Exec("DELETE FROM users WHERE user_id = $1", userID)
+	_, err = database.DB.Exec("DELETE FROM users WHERE user_id = $1", userID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to delete user",

@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"chat-api/config"
+	"chat-api/database"
 	"chat-api/middleware"
 	"chat-api/models"
 	"database/sql"
@@ -12,7 +12,7 @@ import (
 )
 
 func GetChats(c *fiber.Ctx) error {
-	rows, err := config.DB.Query(`
+	rows, err := database.DB.Query(`
 		SELECT chat_id, user_id, created_at, updated_at, disease, text, name, age, height, weight,
 		       gender, physical_condition, medical_history, "L", "O", "D", "C", "R", "A", "F", "T"
 		FROM chats ORDER BY created_at DESC`)
@@ -50,7 +50,7 @@ func GetChat(c *fiber.Ctx) error {
 	}
 
 	var chat models.Chat
-	err = config.DB.QueryRow(`
+	err = database.DB.QueryRow(`
 		SELECT chat_id, user_id, created_at, updated_at, disease, text, name, age, height, weight,
 		       gender, physical_condition, medical_history, "L", "O", "D", "C", "R", "A", "F", "T"
 		FROM chats WHERE chat_id = $1`, chatID).Scan(
@@ -88,7 +88,7 @@ func CreateChat(c *fiber.Ctx) error {
 	}
 
 	chatID := uuid.New()
-	_, err := config.DB.Exec(`
+	_, err := database.DB.Exec(`
 		INSERT INTO chats (chat_id, user_id, created_at, updated_at, disease, text, name, age, height, weight,
 		                   gender, physical_condition, medical_history, "L", "O", "D", "C", "R", "A", "F", "T")
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)`,
@@ -124,7 +124,7 @@ func UpdateChat(c *fiber.Ctx) error {
 
 	// Check if chat belongs to user
 	var ownerID uuid.UUID
-	err = config.DB.QueryRow("SELECT user_id FROM chats WHERE chat_id = $1", chatID).Scan(&ownerID)
+	err = database.DB.QueryRow("SELECT user_id FROM chats WHERE chat_id = $1", chatID).Scan(&ownerID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -149,7 +149,7 @@ func UpdateChat(c *fiber.Ctx) error {
 		})
 	}
 
-	_, err = config.DB.Exec(`
+	_, err = database.DB.Exec(`
 		UPDATE chats SET updated_at = $1, disease = $2, text = $3, name = $4, age = $5, height = $6, weight = $7,
 		               gender = $8, physical_condition = $9, medical_history = $10,
 		               "L" = $11, "O" = $12, "D" = $13, "C" = $14, "R" = $15, "A" = $16, "F" = $17, "T" = $18
@@ -184,7 +184,7 @@ func DeleteChat(c *fiber.Ctx) error {
 
 	// Check if chat belongs to user
 	var ownerID uuid.UUID
-	err = config.DB.QueryRow("SELECT user_id FROM chats WHERE chat_id = $1", chatID).Scan(&ownerID)
+	err = database.DB.QueryRow("SELECT user_id FROM chats WHERE chat_id = $1", chatID).Scan(&ownerID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -202,7 +202,7 @@ func DeleteChat(c *fiber.Ctx) error {
 		})
 	}
 
-	_, err = config.DB.Exec("DELETE FROM chats WHERE chat_id = $1", chatID)
+	_, err = database.DB.Exec("DELETE FROM chats WHERE chat_id = $1", chatID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to delete chat",
@@ -221,7 +221,7 @@ func GetUserChats(c *fiber.Ctx) error {
 	}
 
 	userID := td.UserID
-	rows, err := config.DB.Query(`
+	rows, err := database.DB.Query(`
 		SELECT chat_id, user_id, created_at, updated_at, disease, text, name, age, height, weight,
 		       gender, physical_condition, medical_history, "L", "O", "D", "C", "R", "A", "F", "T"
 		FROM chats WHERE user_id = $1 ORDER BY created_at DESC`, userID)

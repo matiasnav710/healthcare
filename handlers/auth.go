@@ -31,10 +31,11 @@ func SignUp(c *fiber.Ctx) error {
 	}
 
 	// Check if user already exists
-	_, err := config.DB.Exec("SELECT email FROM users WHERE email = $1", input.Email)
+	var existingEmail string
+	err := config.DB.QueryRow("SELECT email FROM users WHERE email = $1", input.Email).Scan(existingEmail)
 	if err != sql.ErrNoRows {
 		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
-			"error": "User already exists",
+			"error": "User already exists " + err.Error(),
 		})
 	}
 

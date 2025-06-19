@@ -14,7 +14,7 @@ import (
 func GetChats(c *fiber.Ctx) error {
 	rows, err := config.DB.Query(`
 		SELECT chat_id, user_id, created_at, disease, text, name, height, weight,
-		       gender, physical_condi, medical_histor, L, O, D, C, R, A, F, T
+		       gender, physical_condition, medical_history, L, O, D, C, R, A, F, T
 		FROM chats ORDER BY created_at DESC`)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -28,7 +28,7 @@ func GetChats(c *fiber.Ctx) error {
 		var chat models.Chat
 		err := rows.Scan(&chat.ChatID, &chat.UserID, &chat.CreatedAt,
 			&chat.Disease, &chat.Text, &chat.Name, &chat.Height, &chat.Weight,
-			&chat.Gender, &chat.PhysicalCondi, &chat.MedicalHistor,
+			&chat.Gender, &chat.PhysicalCondition, &chat.MedicalHistory,
 			&chat.L, &chat.O, &chat.D, &chat.C, &chat.R, &chat.A, &chat.F, &chat.T)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -52,11 +52,11 @@ func GetChat(c *fiber.Ctx) error {
 	var chat models.Chat
 	err = config.DB.QueryRow(`
 		SELECT chat_id, user_id, created_at, disease, text, name, height, weight,
-		       gender, physical_condi, medical_histor, L, O, D, C, R, A, F, T
+		       gender, physical_condition, medical_history, L, O, D, C, R, A, F, T
 		FROM chats WHERE chat_id = $1`, chatID).Scan(
 		&chat.ChatID, &chat.UserID, &chat.CreatedAt,
 		&chat.Disease, &chat.Text, &chat.Name, &chat.Height, &chat.Weight,
-		&chat.Gender, &chat.PhysicalCondi, &chat.MedicalHistor,
+		&chat.Gender, &chat.PhysicalCondition, &chat.MedicalHistory,
 		&chat.L, &chat.O, &chat.D, &chat.C, &chat.R, &chat.A, &chat.F, &chat.T)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -90,11 +90,11 @@ func CreateChat(c *fiber.Ctx) error {
 	chatID := uuid.New()
 	_, err := config.DB.Exec(`
 		INSERT INTO chats (chat_id, user_id, created_at, disease, text, name, height, weight,
-		                   gender, physical_condi, medical_histor, L, O, D, C, R, A, F, T)
+		                   gender, physical_condition, medical_history, L, O, D, C, R, A, F, T)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
 		chatID, userID, time.Now(),
 		input.Disease, input.Text, input.Name, input.Height, input.Weight,
-		input.Gender, input.PhysicalCondi, input.MedicalHistor,
+		input.Gender, input.PhysicalCondition, input.MedicalHistory,
 		input.L, input.O, input.D, input.C, input.R, input.A, input.F, input.T)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -151,11 +151,11 @@ func UpdateChat(c *fiber.Ctx) error {
 
 	_, err = config.DB.Exec(`
 		UPDATE chats SET disease = $1, text = $2, name = $3, height = $4, weight = $5,
-		               gender = $6, physical_condi = $7, medical_histor = $8,
+		               gender = $6, physical_condition = $7, medical_history = $8,
 		               L = $9, O = $10, D = $11, C = $12, R = $13, A = $14, F = $15, T = $16
 		WHERE chat_id = $17`,
 		input.Disease, input.Text, input.Name, input.Height, input.Weight,
-		input.Gender, input.PhysicalCondi, input.MedicalHistor,
+		input.Gender, input.PhysicalCondition, input.MedicalHistory,
 		input.L, input.O, input.D, input.C, input.R, input.A, input.F, input.T, chatID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -223,7 +223,7 @@ func GetUserChats(c *fiber.Ctx) error {
 	userID := td.UserID
 	rows, err := config.DB.Query(`
 		SELECT chat_id, user_id, created_at, disease, text, name, height, weight,
-		       gender, physical_condi, medical_histor, L, O, D, C, R, A, F, T
+		       gender, physical_condition, medical_history, L, O, D, C, R, A, F, T
 		FROM chats WHERE user_id = $1 ORDER BY created_at DESC`, userID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -237,7 +237,7 @@ func GetUserChats(c *fiber.Ctx) error {
 		var chat models.Chat
 		err := rows.Scan(&chat.ChatID, &chat.UserID, &chat.CreatedAt,
 			&chat.Disease, &chat.Text, &chat.Name, &chat.Height, &chat.Weight,
-			&chat.Gender, &chat.PhysicalCondi, &chat.MedicalHistor,
+			&chat.Gender, &chat.PhysicalCondition, &chat.MedicalHistory,
 			&chat.L, &chat.O, &chat.D, &chat.C, &chat.R, &chat.A, &chat.F, &chat.T)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

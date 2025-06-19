@@ -17,6 +17,8 @@ type Chat struct {
 	Age               *int16    `json:"age" db:"age"`
 	Height            *float32  `json:"height" db:"height"`
 	Weight            *float32  `json:"weight" db:"weight"`
+	BloodPressure     *string   `json:"blood_pressure" db:"blood_pressure"`
+	Pulse             *int16    `json:"pulsee" db:"pulsee"`
 	Gender            *string   `json:"gender" db:"gender"`
 	PhysicalCondition *string   `json:"physical_condi" db:"physical_condition"`
 	MedicalHistory    *string   `json:"medical_histor" db:"medical_history"`
@@ -37,6 +39,8 @@ type ChatCreate struct {
 	Age               *int16   `json:"age" db:"age"`
 	Height            *float32 `json:"height"`
 	Weight            *float32 `json:"weight"`
+	BloodPressure     *string  `json:"blood_pressure" db:"blood_pressure"`
+	Pulse             *int16   `json:"pulsee" db:"pulsee"`
 	Gender            *string  `json:"gender"`
 	PhysicalCondition *string  `json:"physical_condition"`
 	MedicalHistory    *string  `json:"medical_history"`

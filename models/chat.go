@@ -20,8 +20,8 @@ type Chat struct {
 	BloodPressure     *string   `json:"blood_pressure" db:"blood_pressure"`
 	Pulse             *int16    `json:"pulsee" db:"pulsee"`
 	Gender            *string   `json:"gender" db:"gender"`
-	PhysicalCondition *string   `json:"physical_condi" db:"physical_condition"`
-	MedicalHistory    *string   `json:"medical_histor" db:"medical_history"`
+	PhysicalCondition *string   `json:"physical_condition" db:"physical_condition"`
+	MedicalHistory    *string   `json:"medical_history" db:"medical_history"`
 	L                 *string   `json:"L" db:"L"`
 	O                 *string   `json:"O" db:"O"`
 	D                 *string   `json:"D" db:"D"`

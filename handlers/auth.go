@@ -122,9 +122,17 @@ func SignIn(c *fiber.Ctx) error {
 		})
 	}
 
+	// Generate JWT
+	genToken, err := middleware.GenerateJWTToken(user.UserID, user.Email)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to generate token",
+		})
+	}
+
 	return c.JSON(fiber.Map{
 		"message": "Login successful",
-		"token":   token,
+		"token":   genToken,
 		"user": fiber.Map{
 			"user_id": user.UserID,
 			"email":   user.Email,

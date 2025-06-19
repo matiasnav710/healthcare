@@ -1,7 +1,7 @@
 package main
 
 import (
-	"chat-api/config"
+	"chat-api/database"
 	"chat-api/routes"
 	"log"
 	"os"
@@ -19,8 +19,8 @@ func main() {
 	}
 
 	// Connect to database
-	config.ConnectDB()
-	defer config.CloseDB()
+	database.ConnectDB()
+	defer database.CloseDB()
 
 	// Initialize Fiber app
 	app := fiber.New(fiber.Config{

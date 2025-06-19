@@ -51,10 +51,10 @@ func SignUp(c *fiber.Ctx) error {
 	err = config.DB.QueryRow(
 		`INSERT INTO users (email, password) VALUES ($1, $2)
 		 RETURNING user_id`,
-		input.Email, hashedPassword).Scan(userID)
+		input.Email, hashedPassword).Scan(&userID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to create user",
+			"error": "Failed to create user" + err.Error(),
 		})
 	}
 

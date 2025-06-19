@@ -73,7 +73,12 @@ func GetChat(c *fiber.Ctx) error {
 }
 
 func CreateChat(c *fiber.Ctx) error {
-	userID := middleware.GetUserID(c)
+	td, tokenErr := middleware.DecodeJWTToken(c)
+	if tokenErr != nil {
+		return tokenErr
+	}
+
+	userID := td.UserID
 	var input models.ChatCreate
 
 	if err := c.BodyParser(&input); err != nil {
@@ -104,7 +109,12 @@ func CreateChat(c *fiber.Ctx) error {
 }
 
 func UpdateChat(c *fiber.Ctx) error {
-	userID := middleware.GetUserID(c)
+	td, err := middleware.DecodeJWTToken(c)
+	if err != nil {
+		return err
+	}
+
+	userID := td.UserID
 	chatID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -159,7 +169,12 @@ func UpdateChat(c *fiber.Ctx) error {
 }
 
 func DeleteChat(c *fiber.Ctx) error {
-	userID := middleware.GetUserID(c)
+	td, err := middleware.DecodeJWTToken(c)
+	if err != nil {
+		return err
+	}
+
+	userID := td.UserID
 	chatID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -200,8 +215,12 @@ func DeleteChat(c *fiber.Ctx) error {
 }
 
 func GetUserChats(c *fiber.Ctx) error {
-	userID := middleware.GetUserID(c)
+	td, err := middleware.DecodeJWTToken(c)
+	if err != nil {
+		return err
+	}
 
+	userID := td.UserID
 	rows, err := config.DB.Query(`
 		SELECT chat_id, user_id, created_at, disease, text, name, height, weight,
 		       gender, physical_condi, medical_histor, L, O, D, C, R, A, F, T

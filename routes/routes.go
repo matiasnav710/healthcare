@@ -15,7 +15,7 @@ func SetupRoutes(app *fiber.App) {
 
 	// Protected routes
 	api := app.Group("/api")
-	protected := api.Group("", middleware.JWTMiddleware())
+	protected := api.Group("", middleware.SetJWtHeaderHandler())
 
 	// User routes
 	users := protected.Group("/users")

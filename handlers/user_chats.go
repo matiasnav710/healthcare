@@ -35,7 +35,12 @@ func GetUserChatsRelations(c *fiber.Ctx) error {
 }
 
 func CreateUserChatRelation(c *fiber.Ctx) error {
-	userID := middleware.GetUserID(c)
+	td, tokenErr := middleware.DecodeJWTToken(c)
+	if tokenErr != nil {
+		return tokenErr
+	}
+
+	userID := td.UserID
 	var input models.UserChatCreate
 
 	if err := c.BodyParser(&input); err != nil {
@@ -69,7 +74,7 @@ func CreateUserChatRelation(c *fiber.Ctx) error {
 	}
 
 	// Check if relation already exists
-	err = config.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users_chats WHERE user_id = $1 AND chat_id = $2)", 
+	err = config.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users_chats WHERE user_id = $1 AND chat_id = $2)",
 		input.UserID, input.ChatID).Scan(&exists)
 	if err == nil && exists {
 		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
@@ -77,7 +82,7 @@ func CreateUserChatRelation(c *fiber.Ctx) error {
 		})
 	}
 
-	_, err = config.DB.Exec("INSERT INTO users_chats (user_id, chat_id) VALUES ($1, $2)", 
+	_, err = config.DB.Exec("INSERT INTO users_chats (user_id, chat_id) VALUES ($1, $2)",
 		input.UserID, input.ChatID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -91,7 +96,12 @@ func CreateUserChatRelation(c *fiber.Ctx) error {
 }
 
 func DeleteUserChatRelation(c *fiber.Ctx) error {
-	userID := middleware.GetUserID(c)
+	td, tokenErr := middleware.DecodeJWTToken(c)
+	if tokenErr != nil {
+		return tokenErr
+	}
+
+	userID := td.UserID
 	relationUserID, err := uuid.Parse(c.Params("user_id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -113,7 +123,7 @@ func DeleteUserChatRelation(c *fiber.Ctx) error {
 		})
 	}
 
-	result, err := config.DB.Exec("DELETE FROM users_chats WHERE user_id = $1 AND chat_id = $2", 
+	result, err := config.DB.Exec("DELETE FROM users_chats WHERE user_id = $1 AND chat_id = $2",
 		relationUserID, chatID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -155,7 +165,7 @@ func GetUserChatRelation(c *fiber.Ctx) error {
 	}
 
 	var userChat models.UserChat
-	err = config.DB.QueryRow("SELECT user_id, chat_id FROM users_chats WHERE user_id = $1 AND chat_id = $2", 
+	err = config.DB.QueryRow("SELECT user_id, chat_id FROM users_chats WHERE user_id = $1 AND chat_id = $2",
 		relationUserID, chatID).Scan(&userChat.UserID, &userChat.ChatID)
 	if err != nil {
 		if err == sql.ErrNoRows {

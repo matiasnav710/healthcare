@@ -72,7 +72,12 @@ func GetUser(c *fiber.Ctx) error {
 }
 
 func UpdateUser(c *fiber.Ctx) error {
-	userID := middleware.GetUserID(c)
+	td, err := middleware.DecodeJWTToken(c)
+	if err != nil {
+		return err
+	}
+
+	userID := td.UserID
 	paramID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -180,7 +185,12 @@ func UpdateUser(c *fiber.Ctx) error {
 }
 
 func DeleteUser(c *fiber.Ctx) error {
-	userID := middleware.GetUserID(c)
+	td, err := middleware.DecodeJWTToken(c)
+	if err != nil {
+		return err
+	}
+
+	userID := td.UserID
 	paramID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

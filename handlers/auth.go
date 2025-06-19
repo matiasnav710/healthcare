@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"chat-api/config"
+	"chat-api/middleware"
 	"chat-api/models"
 	"chat-api/utils"
 	"database/sql"
@@ -59,7 +60,7 @@ func SignUp(c *fiber.Ctx) error {
 	}
 
 	// Generate JWT
-	token, err := utils.GenerateJWT(userID, input.Email)
+	token, err := middleware.GenerateJWTToken(userID, input.Email)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to generate token",
@@ -77,6 +78,27 @@ func SignUp(c *fiber.Ctx) error {
 }
 
 func SignIn(c *fiber.Ctx) error {
+	// Decode JWT
+	var user models.User
+	token, tokenEerr := middleware.DecodeJWTTokenFromHeader(c)
+	if tokenEerr == nil {
+		config.DB.QueryRow(`
+		SELECT user_id, email
+		FROM users WHERE user_id = $1 AND email = $2`, token.UserID, token.Email).Scan(
+			&user.UserID, &user.Email)
+		if user.UserID != uuid.Nil && user.Email != "" {
+			return c.JSON(fiber.Map{
+				"message": "Login successful",
+				"token":   token,
+				"user": fiber.Map{
+					"user_id": user.UserID,
+					"email":   user.Email,
+					"name":    user.Name,
+				},
+			})
+		}
+	}
+
 	var input models.UserSignIn
 	if err := c.BodyParser(&input); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -84,7 +106,6 @@ func SignIn(c *fiber.Ctx) error {
 		})
 	}
 
-	var user models.User
 	err := config.DB.QueryRow(`
 		SELECT user_id, email, password, name 
 		FROM users WHERE email = $1`, input.Email).Scan(
@@ -98,15 +119,7 @@ func SignIn(c *fiber.Ctx) error {
 	// Check password
 	if !utils.CheckPasswordHash(input.Password, user.Password) {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Invalid credentials",
-		})
-	}
-
-	// Generate JWT
-	token, err := utils.GenerateJWT(user.UserID, user.Email)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to generate token",
+			"error": "wrong password",
 		})
 	}
 

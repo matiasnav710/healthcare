@@ -49,10 +49,11 @@ func SignUp(c *fiber.Ctx) error {
 
 	// Create user
 	var userID uuid.UUID
+	var role string
 	err = database.DB.QueryRow(
 		`INSERT INTO users (email, password) VALUES ($1, $2)
-		 RETURNING user_id`,
-		input.Email, hashedPassword).Scan(&userID)
+		 RETURNING user_id, role`,
+		input.Email, hashedPassword).Scan(&userID, &role)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create user" + err.Error(),
@@ -60,7 +61,7 @@ func SignUp(c *fiber.Ctx) error {
 	}
 
 	// Generate JWT
-	token, err := middleware.GenerateJWTToken(userID, input.Email)
+	token, err := middleware.GenerateJWTToken(userID, input.Email, "user")
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to generate token",
@@ -73,6 +74,7 @@ func SignUp(c *fiber.Ctx) error {
 		"user": fiber.Map{
 			"user_id": userID,
 			"email":   input.Email,
+			"role":    role,
 		},
 	})
 }
@@ -83,9 +85,9 @@ func SignIn(c *fiber.Ctx) error {
 	token, tokenEerr := middleware.DecodeJWTTokenFromHeader(c)
 	if tokenEerr == nil {
 		database.DB.QueryRow(`
-		SELECT user_id, email
+		SELECT user_id, email, role
 		FROM users WHERE user_id = $1 AND email = $2`, token.UserID, token.Email).Scan(
-			&user.UserID, &user.Email)
+			&user.UserID, &user.Email, &user.Role)
 		if user.UserID != uuid.Nil && user.Email != "" {
 			return c.JSON(fiber.Map{
 				"message": "Login successful",
@@ -94,6 +96,7 @@ func SignIn(c *fiber.Ctx) error {
 					"user_id": user.UserID,
 					"email":   user.Email,
 					"name":    user.Name,
+					"role":    user.Role,
 				},
 			})
 		}
@@ -107,9 +110,9 @@ func SignIn(c *fiber.Ctx) error {
 	}
 
 	err := database.DB.QueryRow(`
-		SELECT user_id, email, password, name 
+		SELECT user_id, email, password, name, role
 		FROM users WHERE email = $1`, input.Email).Scan(
-		&user.UserID, &user.Email, &user.Password, &user.Name)
+		&user.UserID, &user.Email, &user.Password, &user.Name, &user.Role)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Invalid credentials",
@@ -124,7 +127,7 @@ func SignIn(c *fiber.Ctx) error {
 	}
 
 	// Generate JWT
-	genToken, err := middleware.GenerateJWTToken(user.UserID, user.Email)
+	genToken, err := middleware.GenerateJWTToken(user.UserID, user.Email, user.Role)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to generate token",
@@ -138,6 +141,7 @@ func SignIn(c *fiber.Ctx) error {
 			"user_id": user.UserID,
 			"email":   user.Email,
 			"name":    user.Name,
+			"role":    user.Role,
 		},
 	})
 }

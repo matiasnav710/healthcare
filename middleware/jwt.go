@@ -30,10 +30,11 @@ type TokenDetails struct {
 	Token     *string   `json:"token"`
 	UserID    uuid.UUID `json:"user_id"`
 	Email     string    `json:"email"`
+	Role      string    `json:"role"` // Optional role field
 	ExpiresIn *int64    `json:"exp"`
 }
 
-func GenerateJWTToken(userID uuid.UUID, email string) (*TokenDetails, error) {
+func GenerateJWTToken(userID uuid.UUID, email string, role string) (*TokenDetails, error) {
 	now := time.Now().UTC()
 
 	td := &TokenDetails{
@@ -45,6 +46,7 @@ func GenerateJWTToken(userID uuid.UUID, email string) (*TokenDetails, error) {
 
 	td.UserID = userID
 	td.Email = email
+	td.Role = role
 
 	//ส่วนของ signature
 	SigningKey := []byte(os.Getenv("JWT_SECRET_KEY"))
@@ -53,7 +55,9 @@ func GenerateJWTToken(userID uuid.UUID, email string) (*TokenDetails, error) {
 	atClaims := make(jwt.MapClaims)
 	atClaims["user_id"] = userID.String()
 	atClaims["email"] = email
-	atClaims["exp"] = time.Now().Add(time.Hour * 6).Unix()
+	atClaims["role"] = role
+	atClaims["exp"] = time.Now().Add(6 * time.Hour).Unix()
+	// atClaims["exp"] = time.Now().Add(14 * 24 * time.Hour).Unix()
 	atClaims["iat"] = time.Now().Unix()
 	atClaims["nbf"] = time.Now().Unix()
 
@@ -94,6 +98,9 @@ func DecodeJWTToken(ctx *fiber.Ctx) (*TokenDetails, error) {
 		}
 		if key == "email" {
 			td.Email = value.(string)
+		}
+		if key == "role" {
+			td.Role = value.(string)
 		}
 	}
 	*td.Token = token.Raw
@@ -136,6 +143,9 @@ func DecodeJWTTokenFromHeader(ctx *fiber.Ctx) (*TokenDetails, error) {
 		}
 		if key == "email" {
 			td.Email = value.(string)
+		}
+		if key == "role" {
+			td.Role = value.(string)
 		}
 	}
 	*td.Token = tokenStr

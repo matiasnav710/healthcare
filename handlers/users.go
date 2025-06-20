@@ -6,7 +6,6 @@ import (
 	"chat-api/models"
 	"chat-api/utils"
 	"database/sql"
-	"fmt"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -73,30 +72,28 @@ func GetUser(c *fiber.Ctx) error {
 }
 
 func CreateUser(c *fiber.Ctx) error {
-	// td, err := middleware.DecodeJWTToken(c)
-	// if err != nil {
-	// 	return err
-	// }
-	// if td.role != "admin" {
-	// 	return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-	// 		"error": "Only admins can create users",
-	// 	})
-	// }
-	fmt.Println("I'm in insert user")
+	td, tokenErr := middleware.DecodeJWTToken(c)
+	if tokenErr != nil {
+		return tokenErr
+	}
+	if td.Role != "admin" {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"error": "Only admins can create users",
+		})
+	}
 	var insertData models.UserInsertUpdate
 	if err := c.BodyParser(&insertData); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid updateData json",
 		})
 	}
-	fmt.Println(insertData)
 	var userID uuid.UUID
 	err := database.DB.QueryRow(
 		`INSERT INTO users
-		(email, password, name, age, height, weight, gender, physical_condition, medical_history, profile_image_url)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		(email, password, role, name, age, height, weight, gender, physical_condition, medical_history, profile_image_url)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		RETURNING user_id`,
-		insertData.Email, insertData.Password, insertData.Name,
+		insertData.Email, insertData.Password, insertData.Role, insertData.Name,
 		insertData.Age, insertData.Height, insertData.Weight, insertData.Gender,
 		insertData.PhysicalCondition, insertData.MedicalHistory, insertData.ProfileImageUrl).Scan(&userID)
 	if err != nil {
@@ -104,7 +101,7 @@ func CreateUser(c *fiber.Ctx) error {
 			"error": "Failed to create user " + err.Error(),
 		})
 	}
-	token, err := middleware.GenerateJWTToken(userID, insertData.Email)
+	token, err := middleware.GenerateJWTToken(userID, insertData.Email, insertData.Role)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to generate token",
@@ -117,6 +114,7 @@ func CreateUser(c *fiber.Ctx) error {
 		"user": fiber.Map{
 			"user_id": userID,
 			"email":   insertData.Email,
+			"role":    insertData.Role,
 		},
 	})
 }
@@ -136,7 +134,7 @@ func UpdateUser(c *fiber.Ctx) error {
 	}
 
 	// Check if user is updating their own profile
-	if userID != paramID {
+	if td.Role != "admin" && userID != paramID {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"error": "You can only update your own profile",
 		})
@@ -177,7 +175,11 @@ func DeleteUser(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-
+	if td.Role != "admin" {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"error": "Only admins can delete users",
+		})
+	}
 	userID := td.UserID
 	paramID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
@@ -187,7 +189,7 @@ func DeleteUser(c *fiber.Ctx) error {
 	}
 
 	// Check if user is deleting their own account
-	if userID != paramID {
+	if td.Role != "admin" && userID != paramID {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"error": "You can only delete your own account",
 		})

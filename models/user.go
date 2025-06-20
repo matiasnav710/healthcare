@@ -8,6 +8,7 @@ type User struct {
 	UserID            uuid.UUID `json:"user_id" db:"user_id"`
 	Email             string    `json:"email" db:"email"`
 	Password          string    `json:"password,omitempty" db:"password"`
+	Role              string    `json:"role" db:"role"`
 	Name              *string   `json:"name" db:"name"`
 	Age               *int      `json:"age" db:"age"`
 	Height            *float32  `json:"height" db:"height"`
@@ -31,6 +32,7 @@ type UserSignIn struct {
 type UserResponse struct {
 	UserID            uuid.UUID `json:"user_id"`
 	Email             string    `json:"email"`
+	Role              string    `json:"role"`
 	Name              *string   `json:"name"`
 	Age               *int16    `json:"age"`
 	Height            *float32  `json:"height"`
@@ -44,6 +46,7 @@ type UserResponse struct {
 type UserInsertUpdate struct {
 	Email             string   `json:"email"`
 	Password          string   `json:"password"`
+	Role              string   `json:"role"`
 	Name              *string  `json:"name"`
 	Age               *int16   `json:"age"`
 	Height            *float32 `json:"height"`

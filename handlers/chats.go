@@ -139,7 +139,7 @@ func UpdateChat(c *fiber.Ctx) error {
 		})
 	}
 
-	if ownerID != userID {
+	if td.Role != "admin" && ownerID != userID {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"error": "You can only update your own chats",
 		})
@@ -199,7 +199,7 @@ func DeleteChat(c *fiber.Ctx) error {
 		})
 	}
 
-	if ownerID != userID {
+	if td.Role != "admin" && ownerID != userID {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"error": "You can only delete your own chats",
 		})

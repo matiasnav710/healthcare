@@ -26,7 +26,7 @@ func BuildUsersUpdateDynamicArray(data *models.UserInsertUpdate, role string) (s
 	}
 	if role == "admin" && data.Role != "" {
 		query += "role = $" + strconv.Itoa(argCount) + ", "
-		args = append(args, role)
+		args = append(args, data.Role)
 		argCount++
 	}
 	if data.Name != nil {

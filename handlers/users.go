@@ -145,7 +145,8 @@ func UpdateUser(c *fiber.Ctx) error {
 	}
 
 	// Check if user is updating their own profile
-	if td.Role != "admin" && userID != paramID {
+	role := td.Role
+	if role != "admin" && userID != paramID {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"error": "You can only update your own profile",
 		})
@@ -159,7 +160,7 @@ func UpdateUser(c *fiber.Ctx) error {
 	}
 
 	// Build dynamic query
-	query, args, argCount, err := utils.BuildUsersUpdateDynamicArray(&updateData)
+	query, args, argCount, err := utils.BuildUsersUpdateDynamicArray(&updateData, role)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to build update query: " + err.Error(),
@@ -167,7 +168,7 @@ func UpdateUser(c *fiber.Ctx) error {
 	}
 
 	query += " WHERE user_id = $" + strconv.Itoa(argCount)
-	args = append(args, userID)
+	args = append(args, paramID)
 
 	_, err = database.DB.Exec(query, args...)
 	if err != nil {

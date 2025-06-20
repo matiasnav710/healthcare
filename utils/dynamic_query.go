@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-func BuildUsersUpdateDynamicArray(data *models.UserInsertUpdate) (string, []interface{}, int, error) {
+func BuildUsersUpdateDynamicArray(data *models.UserInsertUpdate, role string) (string, []interface{}, int, error) {
 	query := "UPDATE users SET "
 	args := []interface{}{}
 	argCount := 1
@@ -22,6 +22,11 @@ func BuildUsersUpdateDynamicArray(data *models.UserInsertUpdate) (string, []inte
 		}
 		query += "password = $" + strconv.Itoa(argCount) + ", "
 		args = append(args, hashedPassword)
+		argCount++
+	}
+	if role == "admin" && data.Role != "" {
+		query += "role = $" + strconv.Itoa(argCount) + ", "
+		args = append(args, role)
 		argCount++
 	}
 	if data.Name != nil {

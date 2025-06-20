@@ -6,6 +6,7 @@ import (
 	"chat-api/models"
 	"chat-api/utils"
 	"database/sql"
+	"fmt"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -87,6 +88,10 @@ func CreateUser(c *fiber.Ctx) error {
 			"error": "Invalid updateData json",
 		})
 	}
+	if insertData.Role != "admin" {
+		insertData.Role = "user"
+	}
+	fmt.Println("Creating user with role:", insertData.Role)
 	var userID uuid.UUID
 	err := database.DB.QueryRow(
 		`INSERT INTO users

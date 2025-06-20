@@ -207,7 +207,7 @@ func DeleteUser(c *fiber.Ctx) error {
 		})
 	}
 
-	_, err = database.DB.Exec("DELETE FROM users WHERE user_id = $1", userID)
+	_, err = database.DB.Exec("DELETE FROM users WHERE user_id = $1", paramID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to delete user",

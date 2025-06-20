@@ -91,6 +91,12 @@ func CreateUser(c *fiber.Ctx) error {
 	if insertData.Role != "admin" {
 		insertData.Role = "user"
 	}
+	hashedPassword, hashErr := utils.HashPassword(insertData.Password)
+	if hashErr != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to hash password",
+		})
+	}
 	fmt.Println("Creating user with role:", insertData.Role)
 	var userID uuid.UUID
 	err := database.DB.QueryRow(
@@ -98,7 +104,7 @@ func CreateUser(c *fiber.Ctx) error {
 		(email, password, role, name, age, height, weight, gender, physical_condition, medical_history, profile_image_url)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		RETURNING user_id`,
-		insertData.Email, insertData.Password, insertData.Role, insertData.Name,
+		insertData.Email, hashedPassword, insertData.Role, insertData.Name,
 		insertData.Age, insertData.Height, insertData.Weight, insertData.Gender,
 		insertData.PhysicalCondition, insertData.MedicalHistory, insertData.ProfileImageUrl).Scan(&userID)
 	if err != nil {

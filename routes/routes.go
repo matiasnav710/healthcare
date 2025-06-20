@@ -8,6 +8,10 @@ import (
 )
 
 func SetupRoutes(app *fiber.App) {
+	//default route
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Welcome to Chat API")
+	})
 	// Auth routes (public)
 	// auth routes don't require JWT token
 	auth := app.Group("/auth")

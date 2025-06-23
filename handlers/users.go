@@ -192,18 +192,10 @@ func DeleteUser(c *fiber.Ctx) error {
 			"error": "Only admins can delete users",
 		})
 	}
-	userID := td.UserID
 	paramID, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid user ID",
-		})
-	}
-
-	// Check if user is deleting their own account
-	if td.Role != "admin" && userID != paramID {
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-			"error": "You can only delete your own account",
 		})
 	}
 
